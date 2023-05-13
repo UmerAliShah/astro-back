@@ -4,12 +4,15 @@ const {
   getProduct,
   addProduct,
   putProduct,
-} = require("../controllers/ProductController");
+  deleteProduct,
+} = require("../controllers/productController");
 const upload = require("../middlewares/uploadMulter");
 const requireAuth = require("../middlewares/requireAuth");
 
 const router = express.Router();
 router.post("/", requireAuth, upload.single("image"), addProduct);
 router.put("/:id", requireAuth, upload.single("image"), putProduct);
-router.get("/", requireAuth, getProduct);
+router.delete("/:id", requireAuth, deleteProduct);
+router.get("/", getProduct);
+// router.get("/:id", getVerifiedProduct);
 module.exports = router;

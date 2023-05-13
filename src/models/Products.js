@@ -13,6 +13,9 @@ const Products = new mongoose.Schema({
   activitated: {
     type: Date,
   },
+  code: {
+    type: String,
+  },
   size: {
     type: String,
   },
