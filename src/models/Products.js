@@ -15,6 +15,7 @@ const Products = new mongoose.Schema({
   },
   code: {
     type: String,
+    unique: true,
   },
   size: {
     type: String,
