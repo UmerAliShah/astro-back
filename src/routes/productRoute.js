@@ -6,7 +6,7 @@ const {
   putProduct,
   deleteProduct,
   getVerifiedProduct,
-} = require("../controllers/productController");
+} = require("../controllers/ProductController");
 const upload = require("../middlewares/uploadMulter");
 const requireAuth = require("../middlewares/requireAuth");
 
