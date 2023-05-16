@@ -41,7 +41,7 @@ const putProduct = async (req, res) => {
       req.body.image = imageUrl;
     }
     const product = await ProductModel.findByIdAndUpdate(
-      { _id: id },
+      id ,
       { ...req.body },
       { update: true }
     );
@@ -55,9 +55,8 @@ const putProduct = async (req, res) => {
 const deleteProduct = async (req, res) => {
   const { id } = req.params;
   try {
-    const result = await ProductModel.findByIdAndDelete({ _id: id });
-    const response = await ProductModel.find();
-    res.status(200).send(response);
+    const result = await ProductModel.findByIdAndDelete( id );
+    res.status(200).send("Success");
   } catch (error) {
     res.status(500).send(error);
   }
