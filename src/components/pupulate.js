@@ -14,7 +14,6 @@ module.exports = async function Populate() {
     });
     await user.save();
 
-    console.log("created");
   } catch (err) {
     return console.log("error", err);
   }
