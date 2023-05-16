@@ -6,8 +6,7 @@ const addProduct = async (req, res) => {
   const { code } = req.body;
   try {
     const sameCode = await ProductModel.find({ code });
-    console.log(sameCode, "--------asme");
-    if (!sameCode) {
+    if (!sameCode.length) {
       if (req.file) {
         const imageUrl = await uploadFile(req.file);
         req.body.image = imageUrl;
@@ -17,11 +16,10 @@ const addProduct = async (req, res) => {
       });
       const response = await product.save();
       res.status(200).send({ response });
-    }else{
-      return res.status(403).send({error:"Product code must be unique"})
+    } else {
+      return res.status(403).send({ error: "Product code must be unique" });
     }
   } catch (error) {
-    console.log(error, "-----------errorD");
     res.status(500).send(error);
   }
 };
@@ -38,7 +36,6 @@ const getProduct = async (req, res) => {
 const putProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log(id, req.body, "-----------------id");
     if (req.file) {
       const imageUrl = await uploadFile(req.file);
       req.body.image = imageUrl;
@@ -49,7 +46,6 @@ const putProduct = async (req, res) => {
       { update: true }
     );
     const response = await product.save();
-    console.log(response, "-------------------res");
     res.status(200).send({ response });
   } catch (error) {
     res.status(500).send(error);

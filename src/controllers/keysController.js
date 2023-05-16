@@ -29,7 +29,6 @@ const findKey = async (req, res) => {
     if (!result) {
       return res.status(404).send({ error: "Key not found" });
     }
-    console.log(result, "reess");
     if (result?.activated === null) {
       const setVerify = await KeysModel.findOneAndUpdate(
         { _id: result._id },
@@ -44,7 +43,6 @@ const findKey = async (req, res) => {
       return res.status(400).send({ error: "Already used" });
     }
   } catch (error) {
-    console.log(error);
     return res.status(500).send({ error: "Error finding key" });
   }
 };
@@ -140,7 +138,6 @@ const deleteKey = async (req, res) => {
       res.status(200).send(keys);
     }
   } catch (error) {
-    console.error(error);
     res.status(500).send({ message: "Internal server error" });
   }
 };
