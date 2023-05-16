@@ -14,6 +14,7 @@ const mongoose = require("mongoose");
 
 const authRoute = require("./routes/authRoute");
 const productRoute = require("./routes/productRoute");
+const keysRoute = require("./routes/keysRoute");
 const indexRouter = require("../src/routes/index");
 const populate = require("./components/pupulate");
 
@@ -38,6 +39,7 @@ populate();
 app.use(cors(corsOptions));
 app.use("/auth", authRoute);
 app.use("/product", productRoute);
+app.use("/codes", keysRoute);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

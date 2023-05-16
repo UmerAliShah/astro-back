@@ -13,6 +13,10 @@ const Products = new mongoose.Schema({
   activitated: {
     type: Date,
   },
+  code: {
+    type: String,
+    unique: true,
+  },
   size: {
     type: String,
   },
