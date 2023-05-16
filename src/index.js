@@ -35,7 +35,7 @@ const corsOptions = {
   origin: "*",
   optionsSuccessStatus: 200,
 };
-populate();
+// populate();
 app.use(cors(corsOptions));
 app.use("/auth", authRoute);
 app.use("/product", productRoute);
