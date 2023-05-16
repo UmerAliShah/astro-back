@@ -29,6 +29,7 @@ const findKey = async (req, res) => {
     if (!result) {
       return res.status(404).send({ error: "Key not found" });
     }
+    console.log(result, "reess");
     if (result?.activated === null) {
       const setVerify = await KeysModel.findOneAndUpdate(
         { _id: result._id },
@@ -43,6 +44,7 @@ const findKey = async (req, res) => {
       return res.status(400).send({ error: "Already used" });
     }
   } catch (error) {
+    console.log(error);
     return res.status(500).send({ error: "Error finding key" });
   }
 };
@@ -56,20 +58,22 @@ const getKeys = async (req, res) => {
   monthAgo.setMonth(monthAgo.getMonth() - 1);
   const pageSize = 20;
   const page = parseInt(req.query.page) || 1;
-  const status = {
-    ...(req.query.status === "activated"
-      ? {
-          activated: { $ne: null },
-          ...(req.query.day ? { activated: { $gte: dayAgo } } : {}),
-          ...(req.query.week ? { activated: { $gte: weekAgo } } : {}),
-          ...(req.query.month ? { activated: { $gte: monthAgo } } : {}),
-        }
-      : {}),
+  let dateCondition;
+if(req.query.day) {
+    dateCondition = { $gte: dayAgo };
+} else if(req.query.week) {
+    dateCondition = { $gte: weekAgo };
+} else if(req.query.month) {
+    dateCondition = { $gte: monthAgo };
+}
+
+const status = {
+    ...(req.query.status === "activated" ? { activated: { $ne: null } } : {}),
     ...(req.query.status === "unactivated" ? { activated: null } : {}),
-    ...(req.query.flavour
-      ? { key: { $regex: `${req.query.flavour}`, $options: "i" } }
-      : {}),
-  };
+    ...(req.query.flavour ? { key: { $regex: `${req.query.flavour}`, $options: "i" } } : {}),
+    ...(dateCondition ? { $and: [{ activated: { $ne: null } }, { activated: dateCondition }] } : {}),
+};
+
 
   try {
     const totalCount = await KeysModel.countDocuments(status);
@@ -138,6 +142,7 @@ const deleteKey = async (req, res) => {
       res.status(200).send(keys);
     }
   } catch (error) {
+    console.error(error);
     res.status(500).send({ message: "Internal server error" });
   }
 };
