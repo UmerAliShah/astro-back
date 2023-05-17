@@ -59,21 +59,24 @@ const getKeys = async (req, res) => {
   const pageSize = 20;
   const page = parseInt(req.query.page) || 1;
   let dateCondition;
-if(req.query.day) {
+  if (req.query.day) {
     dateCondition = { $gte: dayAgo };
-} else if(req.query.week) {
+  } else if (req.query.week) {
     dateCondition = { $gte: weekAgo };
-} else if(req.query.month) {
+  } else if (req.query.month) {
     dateCondition = { $gte: monthAgo };
-}
+  }
 
-const status = {
+  const status = {
     ...(req.query.status === "activated" ? { activated: { $ne: null } } : {}),
     ...(req.query.status === "unactivated" ? { activated: null } : {}),
-    ...(req.query.flavour ? { key: { $regex: `${req.query.flavour}`, $options: "i" } } : {}),
-    ...(dateCondition ? { $and: [{ activated: { $ne: null } }, { activated: dateCondition }] } : {}),
-};
-
+    ...(req.query.flavour
+      ? { key: { $regex: `${req.query.flavour}`, $options: "i" } }
+      : {}),
+    ...(dateCondition
+      ? { $and: [{ activated: { $ne: null } }, { activated: dateCondition }] }
+      : {}),
+  };
 
   try {
     const totalCount = await KeysModel.countDocuments(status);
