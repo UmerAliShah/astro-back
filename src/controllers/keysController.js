@@ -50,8 +50,6 @@ const findKey = async (req, res) => {
 };
 
 const getKeys = async (req, res) => {
-  const dayAgo = new Date();
-  dayAgo.setDate(dayAgo.getDate() - 1);
   const weekAgo = new Date();
   weekAgo.setDate(weekAgo.getDate() - 7);
   const monthAgo = new Date();
@@ -60,7 +58,11 @@ const getKeys = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   let dateCondition;
   if (req.query.day) {
-    dateCondition = { $gte: dayAgo };
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
+    dateCondition = { $gte: startOfToday, $lte: endOfToday };
   } else if (req.query.week) {
     dateCondition = { $gte: weekAgo };
   } else if (req.query.month) {
@@ -93,8 +95,12 @@ const getKeys = async (req, res) => {
       )
       .skip((page - 1) * pageSize)
       .limit(pageSize);
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
     const activatedToday = await KeysModel.countDocuments({
-      activated: { $gte: dayAgo },
+      activated: { $gte: startOfToday, $lte: endOfToday },
     });
 
     const activatedThisWeek = await KeysModel.countDocuments({
@@ -119,10 +125,10 @@ const getKeys = async (req, res) => {
       totalActivated,
     });
   } catch (error) {
+    console.log(error, "er");
     res.status(500).send(error);
   }
 };
-
 const getAllKeys = async (req, res) => {
   try {
     const result = await KeysModel.find().populate("batchId");
