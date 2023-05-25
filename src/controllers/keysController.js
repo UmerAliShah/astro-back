@@ -29,7 +29,6 @@ const findKey = async (req, res) => {
     if (!result) {
       return res.status(404).send({ error: "Key not found" });
     }
-    console.log(result, "reess");
     if (result?.activated === null) {
       const setVerify = await KeysModel.findOneAndUpdate(
         { _id: result._id },
@@ -44,7 +43,6 @@ const findKey = async (req, res) => {
       return res.status(400).send({ error: "Already used" });
     }
   } catch (error) {
-    console.log(error);
     return res.status(500).send({ error: "Error finding key" });
   }
 };
@@ -85,8 +83,26 @@ const getKeys = async (req, res) => {
   }
 
   try {
+    const activatedToday = await KeysModel.count({
+      activated: { $gte: startOfToday, $lte: endOfToday },
+    });
+
+    const activatedThisWeek = await KeysModel.countDocuments({
+      activated: { $gte: weekAgo },
+    });
+
+    const activatedThisMonth = await KeysModel.countDocuments({
+      activated: { $gte: monthAgo },
+    });
+
+    const totalActivated = await KeysModel.countDocuments({
+      activated: { $ne: null },
+    });
     if (req.query.batch) {
-      const batches = await BatchModel.find({ BatchID: req.query.batch }, "_id");
+      const batches = await BatchModel.find(
+        { BatchID: req.query.batch },
+        "_id"
+      );
       status.batchId.$in = batches.map((batch) => batch._id);
     }
 
@@ -106,25 +122,15 @@ const getKeys = async (req, res) => {
       .limit(pageSize)
       .lean();
 
-    const activatedToday = await KeysModel.countDocuments({
-      activated: { $gte: startOfToday, $lte: endOfToday },
-      ...status,
-    });
+   
 
-    const activatedThisWeek = await KeysModel.countDocuments({
-      activated: { $gte: weekAgo },
-      ...status,
-    });
-
-    const activatedThisMonth = await KeysModel.countDocuments({
-      activated: { $gte: monthAgo },
-      ...status,
-    });
-
-    const totalActivated = await KeysModel.countDocuments({
-      activated: { $ne: null },
-      ...status,
-    });
+    console.log(
+      ".....hushdo",
+      activatedToday,
+      activatedThisWeek,
+      activatedThisMonth,
+      totalActivated
+    );
 
     res.status(200).send({
       keys: result,
@@ -137,7 +143,6 @@ const getKeys = async (req, res) => {
       totalActivated,
     });
   } catch (error) {
-    console.log(error, "er");
     res.status(500).send(error);
   }
 };
@@ -190,7 +195,6 @@ const getBatch = async (req, res) => {
     ];
 
     const result = await KeysModel.aggregate(pipeline);
-    console.log(result, "resultr");
     res.status(200).send(result);
   } catch (error) {
     res.status(500).send(error);
@@ -203,8 +207,6 @@ const deleteBatch = async (req, res) => {
   try {
     // Find the batch to be deleted
     const batch = await BatchModel.findById(batchId);
-
-    console.log(batchId, batch, "test");
 
     if (!batch) {
       return res.status(404).json({ message: "Batch not found" });
@@ -229,14 +231,12 @@ const deleteBatch = async (req, res) => {
 
 const deleteBulkKeys = async (req, res) => {
   const { data } = req.body;
-  console.log(data, "data");
   try {
     const deletedKeys = await KeysModel.deleteMany({ _id: { $in: data } });
     res
       .status(200)
       .send({ message: "Deleted", deletedCount: deletedKeys.deletedCount });
   } catch (error) {
-    console.error(error);
     res.status(500).send({ message: "Internal server error" });
   }
 };
@@ -254,7 +254,6 @@ const deleteKey = async (req, res) => {
       res.status(200).send(keys);
     }
   } catch (error) {
-    console.error(error);
     res.status(500).send({ message: "Internal server error" });
   }
 };
