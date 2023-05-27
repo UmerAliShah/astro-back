@@ -27,6 +27,12 @@ const Products = new mongoose.Schema(
     displayOrder: {
       type: Number,
     },
+    batches: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Batches",
+      },
+    ],
   },
   { timestamps: true }
 );
