@@ -26,7 +26,7 @@ const addProduct = async (req, res) => {
 
 const getProduct = async (req, res) => {
   try {
-    const response = await ProductModel.find().sort({ displayOrder: 1 });
+    const response = await ProductModel.find().sort({ displayOrder: 1 }).populate("batches");
     res.status(200).send(response);
   } catch (error) {
     res.status(500).send(error);

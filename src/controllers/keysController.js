@@ -1,5 +1,6 @@
 const BatchModel = require("../models/Batch");
 const KeysModel = require("../models/Keys");
+const ProductModel = require("../models/Products");
 
 const createKeys = async (req, res) => {
   const { batchId, keys } = req.body;
@@ -10,12 +11,24 @@ const createKeys = async (req, res) => {
         BatchID: batchId,
       });
       savedBatch = await savedBatch.save();
-      const savedkeys = await KeysModel.insertMany(
+
+      const savedKeys = await KeysModel.insertMany(
         keys.map((key) => ({ key, batchId: savedBatch._id }))
       );
-      res.status(200).send(savedkeys);
+
+      // Update the corresponding product's batches array
+      const lastTwoDigits = batchId.slice(-2);
+      const productsToUpdate = await ProductModel.find({
+        code: { $regex: `.*${lastTwoDigits}$` },
+      });
+      productsToUpdate.forEach(async (product) => {
+        product.batches.push(savedBatch._id);
+        await product.save();
+      });
+
+      res.status(200).send(savedKeys);
     } else {
-      res.status(300).send({ error: "Batch Id should be unique" });
+      res.status(400).send({ error: "Batch ID should be unique" });
     }
   } catch (error) {
     res.status(500).send(error);
@@ -121,8 +134,6 @@ const getKeys = async (req, res) => {
       .skip((page - 1) * pageSize)
       .limit(pageSize)
       .lean();
-
-   
 
     console.log(
       ".....hushdo",
