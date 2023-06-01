@@ -3,10 +3,18 @@ const KeysModel = require("../models/Keys");
 const ProductModel = require("../models/Products");
 
 const createKeys = async (req, res) => {
-  const { batchId, keys } = req.body;
+  const { batchId, keys, postfix } = req.body;
   try {
     let savedBatch = await BatchModel.findOne({ BatchID: batchId });
+    const productsToUpdate = await ProductModel.find({
+      code: postfix,
+    });
     if (!savedBatch) {
+      if (!productsToUpdate || productsToUpdate.length === 0) {
+        return res
+          .status(400)
+          .send({ error: "No product containing this prefix" });
+      }
       savedBatch = new BatchModel({
         BatchID: batchId,
       });
@@ -16,21 +24,17 @@ const createKeys = async (req, res) => {
         keys.map((key) => ({ key, batchId: savedBatch._id }))
       );
 
-      // Update the corresponding product's batches array
-      const lastTwoDigits = batchId.slice(-2);
-      const productsToUpdate = await ProductModel.find({
-        code: { $regex: `.*${lastTwoDigits}$` },
-      });
-      productsToUpdate.forEach(async (product) => {
+      for (const product of productsToUpdate) {
         product.batches.push(savedBatch._id);
         await product.save();
-      });
+      }
 
       res.status(200).send(savedKeys);
     } else {
       res.status(400).send({ error: "Batch ID should be unique" });
     }
   } catch (error) {
+    console.log(error, "error");
     res.status(500).send(error);
   }
 };
@@ -134,14 +138,6 @@ const getKeys = async (req, res) => {
       .skip((page - 1) * pageSize)
       .limit(pageSize)
       .lean();
-
-    console.log(
-      ".....hushdo",
-      activatedToday,
-      activatedThisWeek,
-      activatedThisMonth,
-      totalActivated
-    );
 
     res.status(200).send({
       keys: result,
