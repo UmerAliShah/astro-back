@@ -1,10 +1,32 @@
 const BatchModel = require("../models/Batch");
 const KeysModel = require("../models/Keys");
 const ProductModel = require("../models/Products");
+const XLSX = require("xlsx");
 
 const createKeys = async (req, res) => {
   const { batchId, keys } = req.body;
+  // const file = req.file;
   try {
+    // const workbook = XLSX.readFile(file.path);
+    // const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+    // const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+    //   header: 1,
+    //   range: 1,
+    // });
+
+    // const keys = [];
+    // let batchId = "";
+
+    // jsonData.slice(1).forEach((row) => {
+    //   const [verificationcode, bid] = row;
+    //   keys.push(verificationcode);
+
+    //   // Set the batchId only if it's not already set
+    //   if (!batchId) {
+    //     batchId = bid;
+    //   }
+    // });
+
     let savedBatch = await BatchModel.findOne({ BatchID: batchId });
     if (!savedBatch) {
       savedBatch = new BatchModel({
@@ -16,11 +38,11 @@ const createKeys = async (req, res) => {
         keys.map((key) => ({ key, batchId: savedBatch._id }))
       );
 
-      // Update the corresponding product's batches array
-      const lastTwoDigits = batchId.slice(-2);
+      const firstTwoDigits = batchId.slice(0, 2);
       const productsToUpdate = await ProductModel.find({
-        code: { $regex: `.*${lastTwoDigits}$` },
+        code: { $regex: `^${firstTwoDigits}.*` },
       });
+
       productsToUpdate.forEach(async (product) => {
         product.batches.push(savedBatch._id);
         await product.save();
@@ -31,6 +53,7 @@ const createKeys = async (req, res) => {
       res.status(400).send({ error: "Batch ID should be unique" });
     }
   } catch (error) {
+    console.log("----er", error);
     res.status(500).send(error);
   }
 };
@@ -84,7 +107,7 @@ const getKeys = async (req, res) => {
     ...(req.query.status === "activated" ? { activated: { $ne: null } } : {}),
     ...(req.query.status === "unactivated" ? { activated: null } : {}),
     ...(req.query.flavour
-      ? { key: { $regex: `${req.query.flavour}`, $options: "i" } }
+      ? { key: { $regex: `.*${req.query.flavour.slice(-2)}$`, $options: "i" } }
       : {}),
     ...(dateCondition
       ? { $and: [{ activated: { $ne: null } }, { activated: dateCondition }] }
@@ -134,14 +157,6 @@ const getKeys = async (req, res) => {
       .skip((page - 1) * pageSize)
       .limit(pageSize)
       .lean();
-
-    console.log(
-      ".....hushdo",
-      activatedToday,
-      activatedThisWeek,
-      activatedThisMonth,
-      totalActivated
-    );
 
     res.status(200).send({
       keys: result,
