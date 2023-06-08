@@ -1,10 +1,31 @@
 const BatchModel = require("../models/Batch");
 const KeysModel = require("../models/Keys");
 const ProductModel = require("../models/Products");
+const XLSX = require("xlsx");
 
 const createKeys = async (req, res) => {
   const { batchId, keys, postfix } = req.body;
   try {
+    // const workbook = XLSX.readFile(file.path);
+    // const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+    // const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+    //   header: 1,
+    //   range: 1,
+    // });
+
+    // const keys = [];
+    // let batchId = "";
+
+    // jsonData.slice(1).forEach((row) => {
+    //   const [verificationcode, bid] = row;
+    //   keys.push(verificationcode);
+
+    //   // Set the batchId only if it's not already set
+    //   if (!batchId) {
+    //     batchId = bid;
+    //   }
+    // });
+
     let savedBatch = await BatchModel.findOne({ BatchID: batchId });
     const productsToUpdate = await ProductModel.find({
       code: postfix,
@@ -24,7 +45,12 @@ const createKeys = async (req, res) => {
         keys.map((key) => ({ key, batchId: savedBatch._id }))
       );
 
-      for (const product of productsToUpdate) {
+      const firstTwoDigits = batchId.slice(0, 2);
+      const productsToUpdate = await ProductModel.find({
+        code: { $regex: `^${firstTwoDigits}.*` },
+      });
+
+      productsToUpdate.forEach(async (product) => {
         product.batches.push(savedBatch._id);
         await product.save();
       }
@@ -34,7 +60,6 @@ const createKeys = async (req, res) => {
       res.status(400).send({ error: "Batch ID should be unique" });
     }
   } catch (error) {
-    console.log(error, "error");
     res.status(500).send(error);
   }
 };
@@ -88,7 +113,7 @@ const getKeys = async (req, res) => {
     ...(req.query.status === "activated" ? { activated: { $ne: null } } : {}),
     ...(req.query.status === "unactivated" ? { activated: null } : {}),
     ...(req.query.flavour
-      ? { key: { $regex: `${req.query.flavour}`, $options: "i" } }
+      ? { key: { $regex: `.*${req.query.flavour.slice(-2)}$`, $options: "i" } }
       : {}),
     ...(dateCondition
       ? { $and: [{ activated: { $ne: null } }, { activated: dateCondition }] }
