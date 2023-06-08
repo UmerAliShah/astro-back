@@ -4,8 +4,7 @@ const ProductModel = require("../models/Products");
 const XLSX = require("xlsx");
 
 const createKeys = async (req, res) => {
-  const { batchId, keys } = req.body;
-  // const file = req.file;
+  const { batchId, keys, postfix } = req.body;
   try {
     // const workbook = XLSX.readFile(file.path);
     // const worksheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -28,7 +27,15 @@ const createKeys = async (req, res) => {
     // });
 
     let savedBatch = await BatchModel.findOne({ BatchID: batchId });
+    const productsToUpdate = await ProductModel.find({
+      code: postfix,
+    });
     if (!savedBatch) {
+      if (!productsToUpdate || productsToUpdate.length === 0) {
+        return res
+          .status(400)
+          .send({ error: "No product containing this prefix" });
+      }
       savedBatch = new BatchModel({
         BatchID: batchId,
       });
@@ -46,14 +53,13 @@ const createKeys = async (req, res) => {
       productsToUpdate.forEach(async (product) => {
         product.batches.push(savedBatch._id);
         await product.save();
-      });
+      }
 
       res.status(200).send(savedKeys);
     } else {
       res.status(400).send({ error: "Batch ID should be unique" });
     }
   } catch (error) {
-    console.log("----er", error);
     res.status(500).send(error);
   }
 };
