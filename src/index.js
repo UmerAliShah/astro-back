@@ -66,6 +66,7 @@ if (!mongoUri) {
 mongoose.connect(mongoUri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  server: { socketOptions: { connectTimeoutMS: 60000 } }
 });
 mongoose.connection.on("connected", () => {
   console.log("Connected to mongo instance");
