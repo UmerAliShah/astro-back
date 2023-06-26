@@ -41,6 +41,18 @@ app.use("/auth", authRoute);
 app.use("/product", productRoute);
 app.use("/codes", keysRoute);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.get('/db-status', (req, res) => {
+  const state = mongoose.connection.readyState;
+  if (state === 0) {
+    res.status(500).send('Database is disconnected');
+  } else if (state === 1) {
+    res.send('Database is connected');
+  } else if (state === 2) {
+    res.status(500).send('Database is connecting');
+  } else if (state === 3) {
+    res.status(500).send('Database is disconnecting');
+  }
+});
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
   next(createError(404));
